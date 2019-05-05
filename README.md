@@ -9,7 +9,21 @@ This project is heavly inspired by:
 
 ## How to run
 
+### Prerequisites
+
 You will need to have `ghc` (`Haskell` compiler) installed.
+
+Also you will need to have `cabal`, and install these packages:
+
+- `MissingH`
+- `split`
+
+```shell
+cabal install MissingH
+...
+```
+
+### Running
 
 This repository has a shell script (already with `chmod +x`, to run like a binary) called `compile_and_run.sh`. Just run it like this:
 

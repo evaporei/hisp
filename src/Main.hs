@@ -62,9 +62,21 @@ sum' expr_list = case (any is_number expr_list) of
                    False -> Left Err { reason = "Could not sum, not all expressions in list are Numbers" }
                    True -> Right (Number (foldl sum'_aux 0.0 expr_list))
 
+get_expr_number :: Expr -> Float
+get_expr_number expr = case expr of
+                         Number n -> n
+                         _ -> error "Could not get Number out of an Expression that is not a Number"
+
+subtract' :: [Expr] -> Either Err Expr
+subtract' [] = Left Err { reason = "Could not subtract, list expression is empty" }
+subtract' (x:xs) = case (any is_number ([x] ++ xs)) of
+                   False -> Left Err { reason = "Could not subtract, not all expressions in list are Numbers" }
+                   True -> Right (Number ((get_expr_number x) - (foldl sum'_aux 0.0 xs)))
+
 default_env = Env {
   data' = Data.Map.fromList [
-    ("+", Func sum')
+    ("+", Func sum'),
+    ("-", Func subtract')
                             ]
                   }
 

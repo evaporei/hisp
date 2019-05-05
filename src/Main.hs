@@ -2,6 +2,8 @@ import System.IO (hFlush, stdout)
 
 data Expr = Symbol String | Number Float | List [Expr]
 
+data Err = Err { reason :: String }
+
 repl = do
   putStr "hisp > "
   hFlush stdout

@@ -1,5 +1,7 @@
 import System.IO (hFlush, stdout)
 
+data Expr = Symbol String | Number Float | List [Expr]
+
 repl = do
   putStr "hisp > "
   hFlush stdout

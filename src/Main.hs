@@ -1,13 +1,17 @@
 import System.IO (hFlush, stdout)
-import Data.Map (Map)
+import Data.Map (Map, fromList)
 import Data.List.Utils (replace)
 import Data.List.Split (splitOn)
 import Text.Read (readMaybe)
+import Text.Show.Functions
 
 -- pipeline operator
 x |> f = f x
 
-data Expr = Symbol String | Number Float | List [Expr]
+data Expr = Symbol String
+          | Number Float
+          | List [Expr]
+          | Func ([Expr] -> Either Err Expr)
   deriving(Show)
 
 data Err = Err { reason :: String }
@@ -41,6 +45,28 @@ parse_atom :: String -> Expr
 parse_atom atom = case (readMaybe atom) of
                     Nothing -> Symbol atom
                     Just v -> Number v
+
+is_number :: Expr -> Bool
+is_number expr = case expr of
+                   Number n -> True
+                   _ -> False
+
+sum'_aux :: Float -> Expr -> Float
+sum'_aux acc expr = case expr of
+                   Number n -> acc + n
+                   _ -> error "Should not sum Expressions that are not Numbers"
+
+sum' :: [Expr] -> Either Err Expr
+sum' [] = Left Err { reason = "Could not sum, list expression is empty" }
+sum' expr_list = case (any is_number expr_list) of
+                   False -> Left Err { reason = "Could not sum, not all expressions in list are Numbers" }
+                   True -> Right (Number (foldl sum'_aux 0.0 expr_list))
+
+default_env = Env {
+  data' = Data.Map.fromList [
+    ("+", Func sum')
+                            ]
+                  }
 
 repl = do
   putStr "hisp > "

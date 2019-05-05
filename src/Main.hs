@@ -1,8 +1,11 @@
 import System.IO (hFlush, stdout)
+import Data.Map (Map)
 
 data Expr = Symbol String | Number Float | List [Expr]
 
 data Err = Err { reason :: String }
+
+data Env = Env { data' :: (Map String Expr) }
 
 repl = do
   putStr "hisp > "

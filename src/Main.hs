@@ -1,9 +1,10 @@
 import System.IO (hFlush, stdout)
-import Data.Map (Map, fromList)
+import Data.Map (Map, fromList, lookup)
 import Data.List.Utils (replace)
 import Data.List.Split (splitOn)
 import Text.Read (readMaybe)
 import Text.Show.Functions
+import Data.Either (lefts, isLeft, rights)
 
 -- pipeline operator
 x |> f = f x
@@ -79,6 +80,28 @@ default_env = Env {
     ("-", Func subtract')
                             ]
                   }
+
+call_eval_on_arg :: Env -> Expr -> Either Err Expr
+call_eval_on_arg env expr = eval env expr
+
+eval :: Env -> Expr -> Either Err Expr
+eval env expr = case expr of
+                  Symbol s -> case Data.Map.lookup s (data' env) of
+                                Nothing -> Left Err { reason = "Unexpected symbol: " ++ s }
+                                Just v -> Right v
+                  Number n -> Right expr
+                  List list -> case (null list) of
+                                 True -> Left Err { reason = "Expected a non empty list" }
+                                 False -> case (eval env (head list)) of
+                                            Left err -> Left err
+                                            Right expr -> case expr of
+                                                            Func func -> let eval_args = (map (call_eval_on_arg env) (tail list))
+                                                                          in case (any isLeft eval_args) of
+                                                                               True -> Left (head (lefts eval_args))
+                                                                               False -> func (rights eval_args)
+                                                            _ -> Left Err { reason = "First form must be a function" }
+                  Func _ -> Left Err { reason = "Unexpected form" }
+
 
 repl = do
   putStr "hisp > "

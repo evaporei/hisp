@@ -28,7 +28,7 @@ docker build . -t hisp
 docker run -it hisp
 ```
 
-> Observation: one of the project's dependencies or the build tools themselves are very heavy, I've got a 1GB Docker image on my computer by running those commands :fearful:
+> Observation: the build tools themselves are very heavy, I've got a 1GB Docker image on my computer just by running those commands :fearful:
 
 ### Without Docker
 

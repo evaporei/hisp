@@ -19,8 +19,7 @@ Also you will need to have `cabal`, and install these packages:
 - `split`
 
 ```shell
-cabal install MissingH
-...
+cabal install MissingH split
 ```
 
 ### Running

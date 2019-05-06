@@ -109,7 +109,9 @@ repl = do
   input <- getLine
   if input == ".exit"
      then return ()
-     else print (parse (tokenize input)) >> repl
+     else case (parse (tokenize input)) of
+            Left err -> print (reason err) >> repl
+            Right (expr, _) -> print (eval default_env expr) >> repl
 
 main = do
   repl

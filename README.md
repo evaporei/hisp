@@ -28,9 +28,11 @@ docker build . -t hisp
 docker run -it hisp
 ```
 
-> Observation: the build tools themselves are very heavy, I've got a 1GB Docker image on my computer just by running those commands :fearful:
+> Observation: the build tools of Haskell themselves seem to be very heavy, I've got a 1GB Docker image on my computer just with a 3 line Dockerfile :fearful:
 
 ### Without Docker
+
+You will need `ghc` installed on your computer, which is the `Haskell` compiler.
 
 This repository has a shell script (already with `chmod +x`, to run like a binary) called `compile_and_run.sh`. Just run it like this:
 

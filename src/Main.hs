@@ -1,5 +1,6 @@
 import System.IO (hFlush, stdout)
 import Data.Map (Map, fromList, lookup)
+import Data.List (intercalate)
 import Data.List.Utils (replace)
 import Data.List.Split (splitOn)
 import Text.Read (readMaybe)
@@ -13,10 +14,18 @@ data Expr = Symbol String
           | Number Float
           | List [Expr]
           | Func ([Expr] -> Either Err Expr)
-  deriving(Show)
+
+instance Show Expr where
+  show e = case e of
+             Symbol s -> s
+             Number n -> show n
+             List list -> "(" ++ (intercalate "," (map show list)) ++ ")"
+             Func f -> show f
 
 data Err = Err { reason :: String }
-  deriving(Show)
+
+instance Show Err where
+  show e = "Error: " ++ (reason e)
 
 data Env = Env { data' :: (Map String Expr) }
 
@@ -87,7 +96,7 @@ call_eval_on_arg env expr = eval env expr
 eval :: Env -> Expr -> Either Err Expr
 eval env expr = case expr of
                   Symbol s -> case Data.Map.lookup s (data' env) of
-                                Nothing -> Left Err { reason = "Unexpected symbol: " ++ s }
+                                Nothing -> Left Err { reason = "Unexpected symbol '" ++ s ++ "'" }
                                 Just v -> Right v
                   Number n -> Right expr
                   List list -> case (null list) of
@@ -111,7 +120,9 @@ repl = do
      then return ()
      else case (parse (tokenize input)) of
             Left err -> print (reason err) >> repl
-            Right (expr, _) -> print (eval default_env expr) >> repl
+            Right (expr, _) -> case (eval default_env expr) of
+                                 Left l -> print l >> repl
+                                 Right r -> print r >> repl
 
 main = do
   repl

@@ -1,4 +1,6 @@
-# hisp
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/15306309/57203245-c734c000-6f84-11e9-878d-985be42faf8f.png" alt="hisp-logo" />
+</p>
 
 A `lisp` REPL interpreter made in `Haskell`.
 

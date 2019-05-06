@@ -12,6 +12,17 @@ This project is heavly inspired by:
 - [Rust Lisp REPL interpreter](https://m.stopa.io/risp-lisp-in-rust-90a0dad5b116)
 - [Python Lisp REPL interpreter](https://norvig.com/lispy.html)
 
+## Features
+
+- [x] Numbers (`Float`)
+- [x] Addition (`+`)
+- [x] Subtraction (`-`)
+- [ ] Booleans (`true`, `false`)
+- [ ] Comparison operators (`=`, `>`, `<`, `>=`, `<=`)
+- [ ] def
+- [ ] if
+- [ ] lambdas
+
 ## How to run
 
 ### Prerequisites

@@ -7,12 +7,7 @@
 
 <br />
 
-This project is heavly inspired by:
-
-- [Rust Lisp REPL interpreter](https://m.stopa.io/risp-lisp-in-rust-90a0dad5b116)
-- [Python Lisp REPL interpreter](https://norvig.com/lispy.html)
-
-## Features
+## Language Features
 
 - [x] Numbers (`Float`)
 - [x] Addition (`+`)
@@ -25,20 +20,17 @@ This project is heavly inspired by:
 
 ## How to run
 
-### Prerequisites
+### With Docker
 
-You will need to have `ghc` (`Haskell` compiler) installed.
-
-Also you will need to have `cabal`, and install these packages:
-
-- `MissingH`
-- `split`
-
-```shell
-cabal install MissingH split
+Just run:
+```
+docker build . -t hisp
+docker run -it hisp
 ```
 
-### Running
+> Observation: one of the project's dependencies or the build tools themselves are very heavy, I've got a 1GB Docker image on my computer by running those commands :fearful:
+
+### Without Docker
 
 This repository has a shell script (already with `chmod +x`, to run like a binary) called `compile_and_run.sh`. Just run it like this:
 
@@ -46,3 +38,16 @@ This repository has a shell script (already with `chmod +x`, to run like a binar
 ```shell
 ./compile_and_run.sh
 ```
+
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/15306309/57204202-9062a800-6f8c-11e9-8f89-ac4e07c51395.png" alt="hisp-terminal-repl-example" />
+</p>
+
+## Notes
+
+This project is heavly inspired by:
+
+- [Rust Lisp REPL interpreter](https://m.stopa.io/risp-lisp-in-rust-90a0dad5b116)
+- [Python Lisp REPL interpreter](https://norvig.com/lispy.html)
+
+Also, I don't really know `Haskell` well, so the code probably could be simpler, for now, it just works :slightly_smiling_face:

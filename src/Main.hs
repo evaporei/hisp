@@ -1,8 +1,6 @@
 import System.IO (hFlush, stdout)
 import Data.Map (Map, fromList, lookup)
 import Data.List (intercalate)
-import Data.List.Utils (replace)
-import Data.List.Split (splitOn)
 import Text.Read (readMaybe)
 import Text.Show.Functions
 import Data.Either (lefts, isLeft, rights)
@@ -29,12 +27,19 @@ instance Show Err where
 
 data Env = Env { data' :: (Map String Expr) }
 
+-- adapted from: http://bluebones.net/2007/01/replace-in-haskell/
+replace :: Eq a => [a] -> [a] -> [a] -> [a]
+replace _ _ [] = []
+replace find repl s =
+    if take (length find) s == find
+        then repl ++ (replace find repl (drop (length find) s))
+        else [head s] ++ (replace find repl (tail s))
+
 tokenize :: String -> [String]
 tokenize expr = expr
   |> replace "(" " ( "
   |> replace ")" " ) "
-  |> splitOn " "
-  |> filter (not . null)
+  |> words
 
 parse :: [String] -> Either Err (Expr, [String])
 parse [] = Left Err { reason = "Could not get token, string is empty" }

@@ -4,17 +4,20 @@ import Data.List (intercalate)
 import Text.Read (readMaybe)
 import Text.Show.Functions
 import Data.Either (lefts, isLeft, rights)
+import Data.Char (toLower)
 
 -- pipeline operator
 x |> f = f x
 
-data Expr = Symbol String
+data Expr = Boolean Bool
+          | Symbol String
           | Number Float
           | List [Expr]
           | Func ([Expr] -> Either Err Expr)
 
 instance Show Expr where
   show e = case e of
+             Boolean b -> map toLower (show b)
              Symbol s -> s
              Number n -> show n
              List list -> "(" ++ (intercalate "," (map show list)) ++ ")"
@@ -57,9 +60,12 @@ readSeq (nextToken:rest) exprList
                   Left err -> Left err
 
 parseAtom :: String -> Expr
-parseAtom atom = case (readMaybe atom) of
-                    Nothing -> Symbol atom
-                    Just v -> Number v
+parseAtom atom 
+  | atom == "true" = Boolean True
+  | atom == "false" = Boolean False
+  | otherwise = case (readMaybe atom) of
+                  Nothing -> Symbol atom
+                  Just v -> Number v
 
 isNumber :: Expr -> Bool
 isNumber expr = case expr of
@@ -100,6 +106,7 @@ callEvalOnArg env expr = eval env expr
 
 eval :: Env -> Expr -> Either Err Expr
 eval env expr = case expr of
+                  Boolean b -> Right expr
                   Symbol s -> case Data.Map.lookup s (data' env) of
                                 Nothing -> Left Err { reason = "Unexpected symbol '" ++ s ++ "'" }
                                 Just v -> Right v

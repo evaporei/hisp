@@ -12,7 +12,7 @@
 - [x] Numbers (`Float`)
 - [x] Addition (`+`)
 - [x] Subtraction (`-`)
-- [ ] Booleans (`true`, `false`)
+- [x] Booleans (`true`, `false`)
 - [ ] Comparison operators (`=`, `>`, `<`, `>=`, `<=`)
 - [ ] def
 - [ ] if

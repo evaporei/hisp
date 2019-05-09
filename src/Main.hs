@@ -5,6 +5,8 @@ import Text.Read (readMaybe)
 import Text.Show.Functions
 import Data.Either (lefts, isLeft, rights)
 import Data.Char (toLower)
+import qualified Control.Exception as Exc
+import System.IO.Unsafe
 
 -- pipeline operator
 x |> f = f x
@@ -22,6 +24,14 @@ instance Show Expr where
              Number n -> show n
              List list -> "(" ++ (intercalate "," (map show list)) ++ ")"
              Func f -> show f
+
+instance Eq Expr where
+  (Boolean x) == (Boolean y) = x == y
+  (Symbol x) == (Symbol y) = x == y
+  (Number x) == (Number y) = x == y
+  (List x) == (List y) = x == y
+  (Func x) == (Func y) = error "Should not compare equality of functions"
+  _ == _ = error "Should not compare of equality different types"
 
 data Err = Err { reason :: String }
 
@@ -94,10 +104,29 @@ subtract' (x:xs) = case (any isNumber ([x] ++ xs)) of
                    False -> Left Err { reason = "Could not subtract, not all expressions in list are Numbers" }
                    True -> Right (Number ((getExprNumber x) - (foldl sum'Aux 0.0 xs)))
 
+-- copied from: https://stackoverflow.com/questions/6121256/efficiently-checking-that-all-the-elements-of-a-big-list-are-the-same
+allTheSame :: (Eq a) => [a] -> Bool
+allTheSame xs = and $ map (== head xs) (tail xs)
+
+-- copied from: https://stackoverflow.com/questions/27392547/return-the-first-line-of-a-string-in-haskell
+firstLine :: String -> String
+firstLine = head . lines
+
+-- adapted from: https://stackoverflow.com/questions/4243117/how-to-catch-and-ignore-a-call-to-the-error-function
+unsafeBoolCleanup :: Bool -> Either Err Expr
+unsafeBoolCleanup x = unsafePerformIO $ Exc.catch (x `seq` return (Right (Boolean x))) handler
+    where
+      handler exc = return (Left Err { reason = (firstLine $ show exc) }) `const`  (exc :: Exc.ErrorCall)
+
+equal' :: [Expr] -> Either Err Expr
+equal' [] = Left Err { reason = "Could not compare equality, list expression is empty" }
+equal' exprList = unsafeBoolCleanup $ allTheSame exprList
+
 defaultEnv = Env {
   data' = Data.Map.fromList [
     ("+", Func sum'),
-    ("-", Func subtract')
+    ("-", Func subtract'),
+    ("=", Func equal')
                             ]
                   }
 

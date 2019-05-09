@@ -33,6 +33,14 @@ instance Eq Expr where
   (Func x) == (Func y) = error "Should not compare equality of functions"
   _ == _ = error "Should not compare of equality different types"
 
+instance Ord Expr where
+  (Boolean x) `compare` (Boolean y) = error "Should not compare booleans"
+  (Symbol x) `compare` (Symbol y) = error "Should not compare symbols"
+  (Number x) `compare` (Number y) = x `compare` y
+  (List x) `compare` (List y) = error "Should not compare lists"
+  (Func x) `compare` (Func y) = error "Should not compare functions"
+  _ `compare` _ = error "Should not compare different types"
+
 data Err = Err { reason :: String }
 
 instance Show Err where
@@ -122,11 +130,21 @@ equal' :: [Expr] -> Either Err Expr
 equal' [] = Left Err { reason = "Could not compare equality, list expression is empty" }
 equal' exprList = unsafeBoolCleanup $ allTheSame exprList
 
+allGreater :: (Ord a) => [a] -> Bool
+allGreater [] = True
+allGreater [x] = True
+allGreater (x:y:xs) = x > y && allGreater (y:xs)
+
+greaterThan' :: [Expr] -> Either Err Expr
+greaterThan' [] = Left Err { reason = "Could not compare, list expression is empty" }
+greaterThan' exprList = unsafeBoolCleanup $ allGreater exprList
+
 defaultEnv = Env {
   data' = Data.Map.fromList [
     ("+", Func sum'),
     ("-", Func subtract'),
-    ("=", Func equal')
+    ("=", Func equal'),
+    (">", Func greaterThan')
                             ]
                   }
 

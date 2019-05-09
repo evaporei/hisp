@@ -13,7 +13,7 @@
 - [x] Addition (`+`)
 - [x] Subtraction (`-`)
 - [x] Booleans (`true`, `false`)
-- [ ] Comparison operators (`=`, `>`, `<`, `>=`, `<=`)
+- [x] Comparison operators (`=`, `>`, `<`, `>=`, `<=`)
 - [ ] def
 - [ ] if
 - [ ] lambdas

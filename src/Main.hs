@@ -148,13 +148,23 @@ lessThan' :: [Expr] -> Either Err Expr
 lessThan' [] = Left Err { reason = "Could not compare, list expression is empty" }
 lessThan' exprList = unsafeBoolCleanup $ allLess exprList
 
+allGreaterThanOrEqual :: (Ord a) => [a] -> Bool
+allGreaterThanOrEqual [] = True
+allGreaterThanOrEqual [x] = True
+allGreaterThanOrEqual (x:y:xs) = x >= y && allGreaterThanOrEqual (y:xs)
+
+greaterThanOrEqual' :: [Expr] -> Either Err Expr
+greaterThanOrEqual' [] = Left Err { reason = "Could not compare, list expression is empty" }
+greaterThanOrEqual' exprList = unsafeBoolCleanup $ allGreaterThanOrEqual exprList
+
 defaultEnv = Env {
   data' = Data.Map.fromList [
     ("+", Func sum'),
     ("-", Func subtract'),
     ("=", Func equal'),
     (">", Func greaterThan'),
-    ("<", Func lessThan')
+    ("<", Func lessThan'),
+    (">=", Func greaterThanOrEqual')
                             ]
                   }
 

@@ -12,8 +12,8 @@
 - [x] Numbers (`Float`)
 - [x] Addition (`+`)
 - [x] Subtraction (`-`)
-- [ ] Booleans (`true`, `false`)
-- [ ] Comparison operators (`=`, `>`, `<`, `>=`, `<=`)
+- [x] Booleans (`true`, `false`)
+- [x] Comparison operators (`=`, `>`, `<`, `>=`, `<=`)
 - [ ] def
 - [ ] if
 - [ ] lambdas

@@ -260,7 +260,8 @@ eval env expr = case expr of
                                                                                             True -> Left (head (lefts evalArgs))
                                                                                             False -> (createEnvExprTuple newEnv (func (rights evalArgs)))
                                                                          _ -> Left Err { reason = "First form must be a function" }
-                  Func _ -> Left Err { reason = "Unexpected form" }
+                  Func _ -> Left Err { reason = "Unexpected form (func)" }
+                  Lambda l -> Left Err { reason = "Unexpected form (lambda)" }
 
 
 repl :: Env -> IO ()

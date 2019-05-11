@@ -48,7 +48,10 @@ data Err = Err { reason :: String }
 instance Show Err where
   show e = "Error: " ++ (reason e)
 
-data Env = Env { data' :: (Map String Expr) }
+data Env = Env {
+  data' :: (Map String Expr),
+  outer :: Maybe Env
+               }
 
 data LambdaData = LambdaData { params :: Expr, body :: Expr }
 
@@ -182,7 +185,8 @@ defaultEnv = Env {
     ("<", Func lessThan'),
     (">=", Func greaterThanOrEqual'),
     ("<=", Func lessThanOrEqual')
-                            ]
+                            ],
+  outer = Nothing
                   }
 
 safeHead :: [a] -> Maybe a
@@ -207,7 +211,10 @@ evalIfArgs env argForms = case ((length argForms) /= 3) of
                                                        _ -> Left Err { reason = "'if' result was not a boolean" }
 
 addKeyToEnv :: String -> Expr -> Env -> Env
-addKeyToEnv key expr env = Env { data' = insert key expr (data' env) }
+addKeyToEnv key expr env = Env {
+  data' = insert key expr (data' env),
+  outer = (outer env)
+                               }
 
 evalDefArgs :: Env -> [Expr] -> Either Err (Env, Expr)
 evalDefArgs env argForms = case ((length argForms) /= 2) of
@@ -246,10 +253,17 @@ createEnvExprTuple env either = case either of
                                   Left err -> Left err
                                   Right expr -> Right (env, expr)
 
+getExprOfEnv :: String -> Env -> Maybe Expr
+getExprOfEnv key env = case Data.Map.lookup key (data' env) of
+                         Just v -> Just v
+                         Nothing -> case (outer env) of
+                                      Nothing -> Nothing
+                                      Just o -> getExprOfEnv key o
+
 eval :: Env -> Expr -> Either Err (Env, Expr)
 eval env expr = case expr of
                   Boolean b -> Right (env, expr)
-                  Symbol s -> case Data.Map.lookup s (data' env) of
+                  Symbol s -> case getExprOfEnv s env of
                                 Nothing -> Left Err { reason = "Unexpected symbol '" ++ s ++ "'" }
                                 Just v -> Right (env, v)
                   Number n -> Right (env, expr)

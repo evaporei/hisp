@@ -1,5 +1,5 @@
 import System.IO (hFlush, stdout)
-import Data.Map (Map, fromList, lookup)
+import Data.Map (Map, fromList, lookup, insert)
 import Data.List (intercalate)
 import Text.Read (readMaybe)
 import Text.Show.Functions
@@ -178,40 +178,96 @@ defaultEnv = Env {
                             ]
                   }
 
-callEvalOnArg :: Env -> Expr -> Either Err Expr
+safeHead :: [a] -> Maybe a
+safeHead [] = Nothing
+safeHead (x:xs) = Just x
+
+getElementByIndex :: Int -> [a] -> Maybe a
+getElementByIndex idx list = case (safeHead $ filter (\(_, i) -> i == idx) (zip list [0..])) of
+                               Just j -> Just (fst j)
+                               Nothing -> Nothing
+
+evalIfArgs :: Env -> [Expr] -> Either Err (Env, Expr)
+evalIfArgs env argForms = case ((length argForms) /= 3) of
+                            True -> Left Err { reason = "'if' should have a condition and two parameters, not less, not more" }
+                            False -> case (eval env (head argForms)) of
+                                       Left err -> Left err
+                                       Right (newEnv, expr) -> case expr of
+                                                       Boolean b -> let formIdx = if b then 1 else 2
+                                                                     in case (getElementByIndex (formIdx) argForms) of
+                                                                          Nothing -> Left Err { reason = "Expected form idx: " ++ show formIdx }
+                                                                          Just resForm -> eval env resForm
+                                                       _ -> Left Err { reason = "'if' result was not a boolean" }
+
+addKeyToEnv :: String -> Expr -> Env -> Env
+addKeyToEnv key expr env = Env { data' = insert key expr (data' env) }
+
+evalDefArgs :: Env -> [Expr] -> Either Err (Env, Expr)
+evalDefArgs env argForms = case ((length argForms) /= 2) of
+                             True -> Left Err { reason = "'def' should have a name and a value, not less, not more" }
+                             False -> case (head argForms) of
+                                        Symbol s -> case (eval env (head $ tail argForms)) of
+                                                      Left err -> Left err
+                                                      Right (newEnv, expr) -> let envWithDef = addKeyToEnv (show $ head argForms) expr newEnv
+                                                                               in Right (envWithDef, (head argForms))
+                                        _ -> Left Err { reason = "'def' name should be a symbol (aka string)" }
+
+evalBuiltInForm :: Env -> Expr -> [Expr] -> Maybe (Either Err (Env, Expr))
+evalBuiltInForm env expr argForms = case expr of
+                                      Symbol s
+                                        | s == "if" -> Just (evalIfArgs env argForms)
+                                        | s == "def" -> Just (evalDefArgs env argForms)
+                                        | otherwise -> Nothing
+                                      _ -> Nothing
+
+callEvalOnArg :: Env -> Expr -> Either Err (Env, Expr)
 callEvalOnArg env expr = eval env expr
 
-eval :: Env -> Expr -> Either Err Expr
+extractExprFromTuple :: Either Err (Env, Expr) -> Either Err Expr
+extractExprFromTuple either = case either of
+                                Left err -> Left err
+                                Right (env, expr) -> Right expr
+
+createEnvExprTuple :: Env -> Either Err Expr -> Either Err (Env, Expr)
+createEnvExprTuple env either = case either of
+                                  Left err -> Left err
+                                  Right expr -> Right (env, expr)
+
+eval :: Env -> Expr -> Either Err (Env, Expr)
 eval env expr = case expr of
-                  Boolean b -> Right expr
+                  Boolean b -> Right (env, expr)
                   Symbol s -> case Data.Map.lookup s (data' env) of
                                 Nothing -> Left Err { reason = "Unexpected symbol '" ++ s ++ "'" }
-                                Just v -> Right v
-                  Number n -> Right expr
+                                Just v -> Right (env, v)
+                  Number n -> Right (env, expr)
                   List list -> case (null list) of
                                  True -> Left Err { reason = "Expected a non empty list" }
-                                 False -> case (eval env (head list)) of
-                                            Left err -> Left err
-                                            Right expr -> case expr of
-                                                            Func func -> let evalArgs = (map (callEvalOnArg env) (tail list))
-                                                                          in case (any isLeft evalArgs) of
-                                                                               True -> Left (head (lefts evalArgs))
-                                                                               False -> func (rights evalArgs)
-                                                            _ -> Left Err { reason = "First form must be a function" }
+                                 False -> case (evalBuiltInForm env (head list) (tail list)) of
+                                            Just result -> result
+                                            Nothing -> case (eval env (head list)) of
+                                                         Left err -> Left err
+                                                         Right (newEnv, expr) -> case expr of
+                                                                         Func func -> let evalArgsTuple = (map (callEvalOnArg newEnv) (tail list))
+                                                                                          evalArgs = (map extractExprFromTuple evalArgsTuple)
+                                                                                       in case (any isLeft evalArgs) of
+                                                                                            True -> Left (head (lefts evalArgs))
+                                                                                            False -> (createEnvExprTuple newEnv (func (rights evalArgs)))
+                                                                         _ -> Left Err { reason = "First form must be a function" }
                   Func _ -> Left Err { reason = "Unexpected form" }
 
 
-repl = do
+repl :: Env -> IO ()
+repl env = do
   putStr "hisp > "
   hFlush stdout
   input <- getLine
   if input == ".exit"
      then return ()
      else case (parse (tokenize input)) of
-            Left err -> print (reason err) >> repl
-            Right (expr, _) -> case (eval defaultEnv expr) of
-                                 Left l -> print l >> repl
-                                 Right r -> print r >> repl
+            Left err -> print (reason err) >> repl env
+            Right (expr, _) -> case (eval env expr) of
+                                 Left l -> print l >> repl env
+                                 Right (newEnv, expr) -> print expr >> repl newEnv
 
 main = do
-  repl
+  repl defaultEnv

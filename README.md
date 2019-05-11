@@ -14,8 +14,8 @@
 - [x] Subtraction (`-`)
 - [x] Booleans (`true`, `false`)
 - [x] Comparison operators (`=`, `>`, `<`, `>=`, `<=`)
-- [ ] def
-- [ ] if
+- [x] def
+- [x] if
 - [ ] lambdas
 
 ## How to run

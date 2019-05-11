@@ -1,5 +1,5 @@
 import System.IO (hFlush, stdout)
-import Data.Map (Map, fromList, lookup)
+import Data.Map (Map, fromList, lookup, insert)
 import Data.List (intercalate)
 import Text.Read (readMaybe)
 import Text.Show.Functions
@@ -199,10 +199,24 @@ evalIfArgs env argForms = case ((length argForms) /= 3) of
                                                                           Just resForm -> eval env resForm
                                                        _ -> Left Err { reason = "'if' result was not a boolean" }
 
+addKeyToEnv :: String -> Expr -> Env -> Env
+addKeyToEnv key expr env = Env { data' = insert key expr (data' env) }
+
+evalDefArgs :: Env -> [Expr] -> Either Err (Env, Expr)
+evalDefArgs env argForms = case ((length argForms) /= 2) of
+                             True -> Left Err { reason = "'def' should have a name and a value, not less, not more" }
+                             False -> case (head argForms) of
+                                        Symbol s -> case (eval env (head $ tail argForms)) of
+                                                      Left err -> Left err
+                                                      Right (newEnv, expr) -> let envWithDef = addKeyToEnv (show $ head argForms) expr newEnv
+                                                                               in Right (envWithDef, (head argForms))
+                                        _ -> Left Err { reason = "'def' name should be a symbol (aka string)" }
+
 evalBuiltInForm :: Env -> Expr -> [Expr] -> Maybe (Either Err (Env, Expr))
 evalBuiltInForm env expr argForms = case expr of
                                       Symbol s
                                         | s == "if" -> Just (evalIfArgs env argForms)
+                                        | s == "def" -> Just (evalDefArgs env argForms)
                                         | otherwise -> Nothing
                                       _ -> Nothing
 

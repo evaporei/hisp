@@ -219,11 +219,17 @@ evalDefArgs env argForms = case ((length argForms) /= 2) of
                                                                                in Right (envWithDef, (head argForms))
                                         _ -> Left Err { reason = "'def' name should be a symbol (aka string)" }
 
+evalLambdaArgs :: Env -> [Expr] -> Either Err (Env, Expr)
+evalLambdaArgs env argForms = case ((length argForms) /= 2) of
+                                True -> Left Err { reason = "'fn' should have a parameters list and a body, not less, not more" }
+                                False -> Right (env, Lambda LambdaData { params = head argForms, body = head $ tail argForms })
+
 evalBuiltInForm :: Env -> Expr -> [Expr] -> Maybe (Either Err (Env, Expr))
 evalBuiltInForm env expr argForms = case expr of
                                       Symbol s
                                         | s == "if" -> Just (evalIfArgs env argForms)
                                         | s == "def" -> Just (evalDefArgs env argForms)
+                                        | s == "fn" -> Just (evalLambdaArgs env argForms)
                                         | otherwise -> Nothing
                                       _ -> Nothing
 

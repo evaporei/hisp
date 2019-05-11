@@ -231,17 +231,18 @@ eval env expr = case expr of
                   Func _ -> Left Err { reason = "Unexpected form" }
 
 
-repl = do
+repl :: Env -> IO ()
+repl env = do
   putStr "hisp > "
   hFlush stdout
   input <- getLine
   if input == ".exit"
      then return ()
      else case (parse (tokenize input)) of
-            Left err -> print (reason err) >> repl
-            Right (expr, _) -> case (eval defaultEnv expr) of
-                                 Left l -> print l >> repl
-                                 Right r -> print r >> repl
+            Left err -> print (reason err) >> repl env
+            Right (expr, _) -> case (eval env expr) of
+                                 Left l -> print l >> repl env
+                                 Right r -> print r >> repl env
 
 main = do
-  repl
+  repl defaultEnv

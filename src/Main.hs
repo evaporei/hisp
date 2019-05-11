@@ -178,6 +178,34 @@ defaultEnv = Env {
                             ]
                   }
 
+safeHead :: [a] -> Maybe a
+safeHead [] = Nothing
+safeHead (x:xs) = Just x
+
+getElementByIndex :: Int -> [a] -> Maybe a
+getElementByIndex idx list = case (safeHead $ filter (\(_, i) -> i == idx) (zip list [0..])) of
+                               Just j -> Just (fst j)
+                               Nothing -> Nothing
+
+evalIfArgs :: Env -> [Expr] -> Either Err Expr
+evalIfArgs env argForms = case ((length argForms) /= 3) of
+                            True -> Left Err { reason = "'if' should have a condition and two parameters, not less, not more" }
+                            False -> case (eval env (head argForms)) of
+                                       Left err -> Left err
+                                       Right expr -> case expr of
+                                                       Boolean b -> let formIdx = if b then 1 else 2
+                                                                     in case (getElementByIndex (formIdx) argForms) of
+                                                                          Nothing -> Left Err { reason = "Expected form idx: " ++ show formIdx }
+                                                                          Just resForm -> eval env resForm
+                                                       _ -> Left Err { reason = "'if' result was not a boolean" }
+
+evalBuiltInForm :: Env -> Expr -> [Expr] -> Maybe (Either Err Expr)
+evalBuiltInForm env expr argForms = case expr of
+                                      Symbol s
+                                        | s == "if" -> Just (evalIfArgs env argForms)
+                                        | otherwise -> Nothing
+                                      _ -> Nothing
+
 callEvalOnArg :: Env -> Expr -> Either Err Expr
 callEvalOnArg env expr = eval env expr
 
@@ -190,14 +218,16 @@ eval env expr = case expr of
                   Number n -> Right expr
                   List list -> case (null list) of
                                  True -> Left Err { reason = "Expected a non empty list" }
-                                 False -> case (eval env (head list)) of
-                                            Left err -> Left err
-                                            Right expr -> case expr of
-                                                            Func func -> let evalArgs = (map (callEvalOnArg env) (tail list))
-                                                                          in case (any isLeft evalArgs) of
-                                                                               True -> Left (head (lefts evalArgs))
-                                                                               False -> func (rights evalArgs)
-                                                            _ -> Left Err { reason = "First form must be a function" }
+                                 False -> case (evalBuiltInForm env (head list) (tail list)) of
+                                            Just result -> result
+                                            Nothing -> case (eval env (head list)) of
+                                                         Left err -> Left err
+                                                         Right expr -> case expr of
+                                                                         Func func -> let evalArgs = (map (callEvalOnArg env) (tail list))
+                                                                                       in case (any isLeft evalArgs) of
+                                                                                            True -> Left (head (lefts evalArgs))
+                                                                                            False -> func (rights evalArgs)
+                                                                         _ -> Left Err { reason = "First form must be a function" }
                   Func _ -> Left Err { reason = "Unexpected form" }
 
 

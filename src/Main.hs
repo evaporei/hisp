@@ -25,6 +25,7 @@ instance Show Expr where
              Number n -> show n
              List list -> "(" ++ (intercalate "," (map show list)) ++ ")"
              Func f -> show f
+             Lambda l -> show l
 
 instance Eq Expr where
   (Boolean x) == (Boolean y) = x == y
@@ -50,6 +51,9 @@ instance Show Err where
 data Env = Env { data' :: (Map String Expr) }
 
 data LambdaData = LambdaData { params :: Expr, body :: Expr }
+
+instance Show LambdaData where
+  show l = "<lambda>"
 
 -- adapted from: http://bluebones.net/2007/01/replace-in-haskell/
 replace :: Eq a => [a] -> [a] -> [a] -> [a]

@@ -16,6 +16,7 @@ data Expr = Boolean Bool
           | Number Float
           | List [Expr]
           | Func ([Expr] -> Either Err Expr)
+          | Lambda LambdaData
 
 instance Show Expr where
   show e = case e of
@@ -47,6 +48,8 @@ instance Show Err where
   show e = "Error: " ++ (reason e)
 
 data Env = Env { data' :: (Map String Expr) }
+
+data LambdaData = LambdaData { params :: Expr, body :: Expr }
 
 -- adapted from: http://bluebones.net/2007/01/replace-in-haskell/
 replace :: Eq a => [a] -> [a] -> [a] -> [a]

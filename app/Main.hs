@@ -1,6 +1,7 @@
 module Main where
 
-import Lib (repl, defaultEnv)
+import Repl (repl)
+import Env (defaultEnv)
 
 main :: IO ()
 main = do

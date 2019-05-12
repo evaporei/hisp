@@ -13,7 +13,7 @@ import Expr (Expr(..))
 import Err (Err(..))
 
 data Env = Env {
-  data' :: (Map String Expr),
+  data' :: Map String Expr,
   outer :: Maybe Env
                }
 
@@ -22,16 +22,16 @@ isNumber expr = case expr of
                    Number n -> True
                    _ -> False
 
-sum'Aux :: Float -> Expr -> Float
-sum'Aux acc expr = case expr of
+sumAux :: Float -> Expr -> Float
+sumAux acc expr = case expr of
                    Number n -> acc + n
                    _ -> error "Should not sum Expressions that are not Numbers"
 
 sum' :: [Expr] -> Either Err Expr
 sum' [] = Left Err { reason = "Could not sum, list expression is empty" }
-sum' exprList = case (any isNumber exprList) of
-                   False -> Left Err { reason = "Could not sum, not all expressions in list are Numbers" }
-                   True -> Right (Number (foldl sum'Aux 0.0 exprList))
+sum' exprList = if any isNumber exprList
+                   then Right (Number (foldl sumAux 0.0 exprList))
+                   else Left Err { reason = "Could not sum, not all expressions in list are Numbers" }
 
 getExprNumber :: Expr -> Float
 getExprNumber expr = case expr of
@@ -40,23 +40,24 @@ getExprNumber expr = case expr of
 
 subtract' :: [Expr] -> Either Err Expr
 subtract' [] = Left Err { reason = "Could not subtract, list expression is empty" }
-subtract' (x:xs) = case (any isNumber ([x] ++ xs)) of
-                   False -> Left Err { reason = "Could not subtract, not all expressions in list are Numbers" }
-                   True -> Right (Number ((getExprNumber x) - (foldl sum'Aux 0.0 xs)))
+subtract' (x:xs) = if any isNumber (x : xs)
+                   then Right (Number (getExprNumber x - foldl sumAux 0.0 xs))
+                   else Left Err { reason = "Could not subtract, not all expressions in list are Numbers" }
 
--- copied from: https://stackoverflow.com/questions/6121256/efficiently-checking-that-all-the-elements-of-a-big-list-are-the-same
+-- adapted from: https://stackoverflow.com/questions/6121256/efficiently-checking-that-all-the-elements-of-a-big-list-are-the-same
 allTheSame :: (Eq a) => [a] -> Bool
-allTheSame xs = and $ map (== head xs) (tail xs)
+allTheSame xs = all (== head xs) (tail xs)
 
 -- copied from: https://stackoverflow.com/questions/27392547/return-the-first-line-of-a-string-in-haskell
 firstLine :: String -> String
 firstLine = head . lines
 
+{-# ANN unsafeBoolCleanup "HLint: ignore Evaluate" #-}
 -- adapted from: https://stackoverflow.com/questions/4243117/how-to-catch-and-ignore-a-call-to-the-error-function
 unsafeBoolCleanup :: Bool -> Either Err Expr
 unsafeBoolCleanup x = unsafePerformIO $ Exc.catch (x `seq` return (Right (Boolean x))) handler
     where
-      handler exc = return (Left Err { reason = (firstLine $ show exc) }) `const`  (exc :: Exc.ErrorCall)
+      handler exc = return (Left Err { reason = firstLine $ show exc }) `const`  (exc :: Exc.ErrorCall)
 
 equal' :: [Expr] -> Either Err Expr
 equal' [] = Left Err { reason = "Could not compare equality, list expression is empty" }
@@ -114,13 +115,12 @@ defaultEnv = Env {
 addKeyToEnv :: String -> Expr -> Env -> Env
 addKeyToEnv key expr env = Env {
   data' = insert key expr (data' env),
-  outer = (outer env)
+  outer = outer env
                                }
 
 getExprOfEnv :: String -> Env -> Maybe Expr
 getExprOfEnv key env = case Data.Map.lookup key (data' env) of
                          Just v -> Just v
-                         Nothing -> case (outer env) of
+                         Nothing -> case outer env of
                                       Nothing -> Nothing
                                       Just o -> getExprOfEnv key o
-

@@ -3,6 +3,7 @@ version: '1.0.0'
 synopsis: Lisp REPL interpreter
 description: Please see the README.md for more information
 category: Development
+license: WTFPL
 author: Otávio Pace
 maintainer: otaviopp8@gmail.com
 github: otaviopace/hisp

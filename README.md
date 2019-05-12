@@ -169,3 +169,9 @@ This project is heavly inspired by:
 - [Python Lisp REPL interpreter](https://norvig.com/lispy.html)
 
 Also, I don't really know `Haskell` well, so the code probably could be a lot better. I did my best with what I know about the language at the time.
+
+## License
+>You can check out the full license [here](https://github.com/otaviopace/hisp/blob/master/LICENSE.md)
+
+This project is licensed under the terms of the **WTFPL** license.
+You just DO WHAT THE FUCK YOU WANT TO.

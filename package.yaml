@@ -26,8 +26,13 @@ executables:
 tests:
   hisp-test:
     main:                Spec.hs
-    source-dirs:         test
+    source-dirs:
+      - test/integration
+      - src
     ghc-options:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
+    dependencies:
+    - hspec
+    - QuickCheck

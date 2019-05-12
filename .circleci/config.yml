@@ -25,9 +25,22 @@ jobs:
           name: Stack Test
           command: stack test
 
+  lint:
+    docker:
+      - image: haskell
+    steps:
+      - checkout
+      - run:
+          name: Stack Setup
+          command: stack setup
+      - run:
+          name: Install and Run Hlint
+          command: curl -sSL https://raw.github.com/ndmitchell/hlint/master/misc/run.sh | sh -s .
+
 workflows:
   version: 2
   build_and_test:
     jobs:
       - build
       - test
+      - lint

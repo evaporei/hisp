@@ -87,6 +87,15 @@ Tests are run using `stack`, you should install it first. To run them, just use:
 ```shell
 stack test
 ```
+
+## Lint
+
+To run the linter, you will have to install first `hlint`. To check if everything is correct:
+
+```shell
+hlint .
+```
+
 ## How it works
 
 Well it has 3 main steps, like many interpreters:

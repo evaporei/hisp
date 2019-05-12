@@ -17,8 +17,8 @@ repl env = do
   input <- getLine
   if input == ".exit"
      then return ()
-     else case (parse (tokenize input)) of
+     else case parse (tokenize input) of
             Left err -> print (reason err) >> repl env
-            Right (expr, _) -> case (eval env expr) of
+            Right (expr, _) -> case eval env expr of
                                  Left l -> print l >> repl env
                                  Right (newEnv, expr) -> print expr >> repl newEnv

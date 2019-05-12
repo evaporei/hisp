@@ -16,7 +16,7 @@
 - [x] Comparison operators (`=`, `>`, `<`, `>=`, `<=`)
 - [x] def
 - [x] if
-- [ ] lambdas
+- [x] lambdas
 
 ## How to run
 

@@ -16,6 +16,7 @@ data Expr = Boolean Bool
           | Number Float
           | List [Expr]
           | Func ([Expr] -> Either Err Expr)
+          | Lambda LambdaData
 
 instance Show Expr where
   show e = case e of
@@ -24,6 +25,7 @@ instance Show Expr where
              Number n -> show n
              List list -> "(" ++ (intercalate "," (map show list)) ++ ")"
              Func f -> show f
+             Lambda l -> show l
 
 instance Eq Expr where
   (Boolean x) == (Boolean y) = x == y
@@ -46,7 +48,15 @@ data Err = Err { reason :: String }
 instance Show Err where
   show e = "Error: " ++ (reason e)
 
-data Env = Env { data' :: (Map String Expr) }
+data Env = Env {
+  data' :: (Map String Expr),
+  outer :: Maybe Env
+               }
+
+data LambdaData = LambdaData { params :: Expr, body :: Expr }
+
+instance Show LambdaData where
+  show l = "<lambda>"
 
 -- adapted from: http://bluebones.net/2007/01/replace-in-haskell/
 replace :: Eq a => [a] -> [a] -> [a] -> [a]
@@ -175,7 +185,8 @@ defaultEnv = Env {
     ("<", Func lessThan'),
     (">=", Func greaterThanOrEqual'),
     ("<=", Func lessThanOrEqual')
-                            ]
+                            ],
+  outer = Nothing
                   }
 
 safeHead :: [a] -> Maybe a
@@ -200,7 +211,10 @@ evalIfArgs env argForms = case ((length argForms) /= 3) of
                                                        _ -> Left Err { reason = "'if' result was not a boolean" }
 
 addKeyToEnv :: String -> Expr -> Env -> Env
-addKeyToEnv key expr env = Env { data' = insert key expr (data' env) }
+addKeyToEnv key expr env = Env {
+  data' = insert key expr (data' env),
+  outer = (outer env)
+                               }
 
 evalDefArgs :: Env -> [Expr] -> Either Err (Env, Expr)
 evalDefArgs env argForms = case ((length argForms) /= 2) of
@@ -212,11 +226,17 @@ evalDefArgs env argForms = case ((length argForms) /= 2) of
                                                                                in Right (envWithDef, (head argForms))
                                         _ -> Left Err { reason = "'def' name should be a symbol (aka string)" }
 
+evalLambdaArgs :: Env -> [Expr] -> Either Err (Env, Expr)
+evalLambdaArgs env argForms = case ((length argForms) /= 2) of
+                                True -> Left Err { reason = "'fn' should have a parameters list and a body, not less, not more" }
+                                False -> Right (env, Lambda LambdaData { params = head argForms, body = head $ tail argForms })
+
 evalBuiltInForm :: Env -> Expr -> [Expr] -> Maybe (Either Err (Env, Expr))
 evalBuiltInForm env expr argForms = case expr of
                                       Symbol s
                                         | s == "if" -> Just (evalIfArgs env argForms)
                                         | s == "def" -> Just (evalDefArgs env argForms)
+                                        | s == "fn" -> Just (evalLambdaArgs env argForms)
                                         | otherwise -> Nothing
                                       _ -> Nothing
 
@@ -233,10 +253,46 @@ createEnvExprTuple env either = case either of
                                   Left err -> Left err
                                   Right expr -> Right (env, expr)
 
+getExprOfEnv :: String -> Env -> Maybe Expr
+getExprOfEnv key env = case Data.Map.lookup key (data' env) of
+                         Just v -> Just v
+                         Nothing -> case (outer env) of
+                                      Nothing -> Nothing
+                                      Just o -> getExprOfEnv key o
+
+parseListOfSymbolStrings :: Expr -> Either Err [String]
+parseListOfSymbolStrings form = case form of
+                                  List list -> let l = map (\expr -> case expr of
+                                                            Symbol s -> Right s
+                                                            _ -> Left Err { reason = "Expected symbols in the arguments list" }) list
+                                                in case (any isLeft l) of
+                                                     True -> Left (head (lefts l))
+                                                     False -> Right (rights l)
+                                  _ -> Left Err { reason = "Expected arguments to be a form" }
+
+evalForms :: Env -> [Expr] -> Either Err [Expr]
+evalForms env argForms = let evalArgsTuple = (map (callEvalOnArg env) argForms)
+                             evalArgs = map extractExprFromTuple evalArgsTuple
+                          in case (any isLeft evalArgs) of
+                               True -> Left (head (lefts evalArgs))
+                               False -> Right (rights evalArgs)
+
+buildEnvForLambda :: Env -> Expr -> [Expr] -> Either Err Env
+buildEnvForLambda outerEnv params argForms = case parseListOfSymbolStrings params of
+                                               Left err -> Left err
+                                               Right exprList -> case ((length exprList) /= (length argForms)) of
+                                                                   True -> Left Err { reason = "Expected " ++ (show (length exprList)) ++ " arguments, got " ++ (show (length argForms)) }
+                                                                   False -> case (evalForms outerEnv argForms) of
+                                                                              Left err -> Left err
+                                                                              Right forms -> Right Env {
+                                                                                              data' = Data.Map.fromList (zip exprList forms),
+                                                                                              outer = Just outerEnv
+                                                                                                       }
+
 eval :: Env -> Expr -> Either Err (Env, Expr)
 eval env expr = case expr of
                   Boolean b -> Right (env, expr)
-                  Symbol s -> case Data.Map.lookup s (data' env) of
+                  Symbol s -> case getExprOfEnv s env of
                                 Nothing -> Left Err { reason = "Unexpected symbol '" ++ s ++ "'" }
                                 Just v -> Right (env, v)
                   Number n -> Right (env, expr)
@@ -247,13 +303,15 @@ eval env expr = case expr of
                                             Nothing -> case (eval env (head list)) of
                                                          Left err -> Left err
                                                          Right (newEnv, expr) -> case expr of
-                                                                         Func func -> let evalArgsTuple = (map (callEvalOnArg newEnv) (tail list))
-                                                                                          evalArgs = (map extractExprFromTuple evalArgsTuple)
-                                                                                       in case (any isLeft evalArgs) of
-                                                                                            True -> Left (head (lefts evalArgs))
-                                                                                            False -> (createEnvExprTuple newEnv (func (rights evalArgs)))
+                                                                         Func func -> case (evalForms newEnv (tail list)) of
+                                                                                        Left err -> Left err
+                                                                                        Right forms -> (createEnvExprTuple newEnv (func forms))
+                                                                         Lambda lambda -> case buildEnvForLambda newEnv (params lambda) (tail list) of
+                                                                                            Left err -> Left err
+                                                                                            Right envForLambda ->  eval envForLambda (body lambda)
                                                                          _ -> Left Err { reason = "First form must be a function" }
-                  Func _ -> Left Err { reason = "Unexpected form" }
+                  Func _ -> Left Err { reason = "Unexpected form (func)" }
+                  Lambda l -> Left Err { reason = "Unexpected form (lambda)" }
 
 
 repl :: Env -> IO ()

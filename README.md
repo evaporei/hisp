@@ -79,6 +79,14 @@ hisp
 - The `src` folder contains the code that is consumed by the `main` function, so it is much like a library folder.
 - The `test` folder, well, as the name suggests, it has the code for the tests.
 
+## Tests
+
+Tests are run using `stack`, you should install it first. To run them, just use:
+
+```shell
+stack test
+```
+
 ## Notes
 
 This project is heavly inspired by:

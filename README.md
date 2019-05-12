@@ -153,7 +153,7 @@ struct Environment {
 ```
 Imagine this like a `class` that has a map of things like `+`, `-`, `=`, ... to values like `Expression::Function(implementation)`.
 
-```
+```javascript
 function sum_implementation (values) {
   return values.reduce((acc, curr) => acc + curr, 0)
 }

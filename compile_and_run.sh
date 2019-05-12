@@ -1,3 +1,3 @@
 #!/bin/sh
 
-ghc -o hisp src/Main.hs && ./hisp
+ghc -o hisp -isrc app/Main.hs && ./hisp

@@ -1,0 +1,49 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.31.1.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 7743ba067f342e74c57e0a026ca6a6ffdcc00b1609b1b2031fad2a9283faf3b2
+
+name:           hisp
+version:        1.0.0
+synopsis:       Lisp REPL interpreter
+description:    Please see the README.md for more information
+category:       Development
+homepage:       https://github.com/otaviopace/hisp#readme
+bug-reports:    https://github.com/otaviopace/hisp/issues
+author:         Otávio Pace
+maintainer:     otaviopp8@gmail.com
+build-type:     Simple
+
+source-repository head
+  type: git
+  location: https://github.com/otaviopace/hisp
+
+executable hisp-exe
+  main-is: Main.hs
+  other-modules:
+      Lib
+      Paths_hisp
+  hs-source-dirs:
+      app
+      src
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , containers
+  default-language: Haskell2010
+
+test-suite hisp-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_hisp
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , containers
+  default-language: Haskell2010

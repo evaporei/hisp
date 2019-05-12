@@ -32,6 +32,20 @@ docker run -it hisp
 
 ### Without Docker
 
+`hisp` can be compiled/executed using either using `stack` or just by using `ghc`.
+
+#### Using Stack
+
+You will need `stack` installed on your computer, which is a tool for developing `Haskell` projects.
+
+To compile and run:
+
+```shell
+stack run
+```
+
+#### Using just GHC
+
 You will need `ghc` installed on your computer, which is the `Haskell` compiler.
 
 This repository has a shell script (already with `chmod +x`, to run like a binary) called `compile_and_run.sh`. Just run it like this:
@@ -44,6 +58,26 @@ This repository has a shell script (already with `chmod +x`, to run like a binar
 <p align="center">
   <img src="https://user-images.githubusercontent.com/15306309/57204202-9062a800-6f8c-11e9-8f89-ac4e07c51395.png" alt="hisp-terminal-repl-example" />
 </p>
+
+## Project structure
+
+Since `hisp` is built with `stack`, the folders follow the standard of it.
+
+```
+hisp
+│   README.md
+│   ...
+└─── app
+│   └─── Main.hs
+└─── src
+│   └─── ...
+└─── test
+    └─── ...
+```
+
+The `app` folder contains the `main` function that starts the REPL.
+The `src` folder contains the code that is consumed by the `main` function, so it is much like a library folder.
+The `test` folder, well, as the name suggests, it has the code for the tests.
 
 ## Notes
 

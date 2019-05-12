@@ -2,3 +2,4 @@
 *.o
 hisp
 .stack-work/
+hisp.cabal

@@ -4,5 +4,4 @@ import Repl (repl)
 import Env (defaultEnv)
 
 main :: IO ()
-main = do
-  repl defaultEnv
+main = repl defaultEnv

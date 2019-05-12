@@ -21,7 +21,7 @@ instance Show Expr where
              Boolean b -> map toLower (show b)
              Symbol s -> s
              Number n -> show n
-             List list -> "(" ++ (intercalate "," (map show list)) ++ ")"
+             List list -> "(" ++ intercalate "," (map show list) ++ ")"
              Func f -> show f
              Lambda l -> show l
 

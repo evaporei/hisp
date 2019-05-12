@@ -2,4 +2,6 @@ FROM haskell
 
 COPY . .
 
-CMD ["./compile_and_run.sh"]
+RUN stack setup && stack build
+
+CMD stack run

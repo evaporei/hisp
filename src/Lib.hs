@@ -1,3 +1,8 @@
+module Lib
+    ( repl 
+    , defaultEnv
+    ) where
+
 import System.IO (hFlush, stdout)
 import Data.Map (Map, fromList, lookup, insert)
 import Data.List (intercalate)
@@ -326,6 +331,3 @@ repl env = do
             Right (expr, _) -> case (eval env expr) of
                                  Left l -> print l >> repl env
                                  Right (newEnv, expr) -> print expr >> repl newEnv
-
-main = do
-  repl defaultEnv

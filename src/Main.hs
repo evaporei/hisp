@@ -260,6 +260,35 @@ getExprOfEnv key env = case Data.Map.lookup key (data' env) of
                                       Nothing -> Nothing
                                       Just o -> getExprOfEnv key o
 
+parseListOfSymbolStrings :: Expr -> Either Err [String]
+parseListOfSymbolStrings form = case form of
+                                  List list -> let l = map (\expr -> case expr of
+                                                            Symbol s -> Right s
+                                                            _ -> Left Err { reason = "Expected symbols in the arguments list" }) list
+                                                in case (any isLeft l) of
+                                                     True -> Left (head (lefts l))
+                                                     False -> Right (rights l)
+                                  _ -> Left Err { reason = "Expected arguments to be a form" }
+
+evalForms :: Env -> [Expr] -> Either Err [Expr]
+evalForms env argForms = let evalArgsTuple = (map (callEvalOnArg env) argForms)
+                             evalArgs = map extractExprFromTuple evalArgsTuple
+                          in case (any isLeft evalArgs) of
+                               True -> Left (head (lefts evalArgs))
+                               False -> Right (rights evalArgs)
+
+buildEnvForLambda :: Env -> Expr -> [Expr] -> Either Err Env
+buildEnvForLambda outerEnv params argForms = case parseListOfSymbolStrings params of
+                                               Left err -> Left err
+                                               Right exprList -> case ((length exprList) /= (length argForms)) of
+                                                                   True -> Left Err { reason = "Expected " ++ (show (length exprList)) ++ " arguments, got " ++ (show (length argForms)) }
+                                                                   False -> case (evalForms outerEnv argForms) of
+                                                                              Left err -> Left err
+                                                                              Right forms -> Right Env {
+                                                                                              data' = Data.Map.fromList (zip exprList forms),
+                                                                                              outer = Just outerEnv
+                                                                                                       }
+
 eval :: Env -> Expr -> Either Err (Env, Expr)
 eval env expr = case expr of
                   Boolean b -> Right (env, expr)
@@ -274,11 +303,12 @@ eval env expr = case expr of
                                             Nothing -> case (eval env (head list)) of
                                                          Left err -> Left err
                                                          Right (newEnv, expr) -> case expr of
-                                                                         Func func -> let evalArgsTuple = (map (callEvalOnArg newEnv) (tail list))
-                                                                                          evalArgs = (map extractExprFromTuple evalArgsTuple)
-                                                                                       in case (any isLeft evalArgs) of
-                                                                                            True -> Left (head (lefts evalArgs))
-                                                                                            False -> (createEnvExprTuple newEnv (func (rights evalArgs)))
+                                                                         Func func -> case (evalForms newEnv (tail list)) of
+                                                                                        Left err -> Left err
+                                                                                        Right forms -> (createEnvExprTuple newEnv (func forms))
+                                                                         Lambda lambda -> case buildEnvForLambda newEnv (params lambda) (tail list) of
+                                                                                            Left err -> Left err
+                                                                                            Right envForLambda ->  eval envForLambda (body lambda)
                                                                          _ -> Left Err { reason = "First form must be a function" }
                   Func _ -> Left Err { reason = "Unexpected form (func)" }
                   Lambda l -> Left Err { reason = "Unexpected form (lambda)" }

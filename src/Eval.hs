@@ -52,9 +52,7 @@ evalBuiltInForm env (Symbol s) argForms
 evalBuiltInForm env _ argForms = Nothing
 
 extractExprFromTuple :: Either Err (Env, Expr) -> Either Err Expr
-extractExprFromTuple either = case either of
-                                Left err -> Left err
-                                Right (env, expr) -> Right expr
+extractExprFromTuple either = snd <$> either
 
 createEnvExprTuple :: Env -> Either Err Expr -> Either Err (Env, Expr)
 createEnvExprTuple env either = case either of

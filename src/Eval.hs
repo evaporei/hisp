@@ -1,4 +1,5 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE TupleSections #-}
 
 module Eval 
     ( eval
@@ -55,9 +56,7 @@ extractExprFromTuple :: Either Err (Env, Expr) -> Either Err Expr
 extractExprFromTuple either = snd <$> either
 
 createEnvExprTuple :: Env -> Either Err Expr -> Either Err (Env, Expr)
-createEnvExprTuple env either = case either of
-                                  Left err -> Left err
-                                  Right expr -> Right (env, expr)
+createEnvExprTuple env either = (env,) <$> either
 
 parseListOfSymbolStrings :: Expr -> Either Err [String]
 parseListOfSymbolStrings form = case form of

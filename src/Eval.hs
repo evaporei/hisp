@@ -21,14 +21,13 @@ getElementByIndex idx list = fst <$> safeHead (filter (\(_, i) -> i == idx) (zip
 evalIfArgs :: Env -> [Expr] -> Either Err (Env, Expr)
 evalIfArgs env argForms = if length argForms /= 3
                             then Left Err { reason = "'if' should have a condition and two parameters, not less, not more" }
-                            else case eval env (head argForms) of
-                                       Left err -> Left err
-                                       Right (newEnv, expr) -> case expr of
-                                                       Boolean b -> let formIdx = if b then 1 else 2
-                                                                     in case getElementByIndex formIdx argForms of
-                                                                          Nothing -> Left Err { reason = "Expected form idx: " ++ show formIdx }
-                                                                          Just resForm -> eval env resForm
-                                                       _ -> Left Err { reason = "'if' result was not a boolean" }
+                            else eval env (head argForms) >>=
+                              \(newEnv, expr) -> case expr of
+                                                   Boolean b -> let formIdx = if b then 1 else 2
+                                                                 in case getElementByIndex formIdx argForms of
+                                                                      Nothing -> Left Err { reason = "Expected form idx: " ++ show formIdx }
+                                                                      Just resForm -> eval env resForm
+                                                   _ -> Left Err { reason = "'if' result was not a boolean" }
 
 evalDefArgs :: Env -> [Expr] -> Either Err (Env, Expr)
 evalDefArgs env argForms = if length argForms /= 2

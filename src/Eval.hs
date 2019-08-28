@@ -16,9 +16,7 @@ safeHead [] = Nothing
 safeHead (x:xs) = Just x
 
 getElementByIndex :: Int -> [a] -> Maybe a
-getElementByIndex idx list = case safeHead $ filter (\(_, i) -> i == idx) (zip list [0..]) of
-                               Just j -> Just (fst j)
-                               Nothing -> Nothing
+getElementByIndex idx list = fst <$> safeHead (filter (\(_, i) -> i == idx) (zip list [0..]))
 
 evalIfArgs :: Env -> [Expr] -> Either Err (Env, Expr)
 evalIfArgs env argForms = if length argForms /= 3

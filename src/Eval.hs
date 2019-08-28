@@ -33,10 +33,9 @@ evalDefArgs :: Env -> [Expr] -> Either Err (Env, Expr)
 evalDefArgs env argForms = if length argForms /= 2
                              then Left Err { reason = "'def' should have a name and a value, not less, not more" }
                              else case head argForms of
-                                        Symbol s -> case eval env (head $ tail argForms) of
-                                                      Left err -> Left err
-                                                      Right (newEnv, expr) -> let envWithDef = addKeyToEnv (show $ head argForms) expr newEnv
-                                                                               in Right (envWithDef, head argForms)
+                                        Symbol s -> eval env (head $ tail argForms) >>=
+                                                      \(newEnv, expr) -> let envWithDef = addKeyToEnv (show $ head argForms) expr newEnv
+                                                                          in Right (envWithDef, head argForms)
                                         _ -> Left Err { reason = "'def' name should be a symbol (aka string)" }
 
 evalLambdaArgs :: Env -> [Expr] -> Either Err (Env, Expr)

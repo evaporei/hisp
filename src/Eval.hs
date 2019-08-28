@@ -75,16 +75,14 @@ parseListOfSymbolStrings form = case form of
                                   _ -> Left Err { reason = "Expected arguments to be a form" }
 
 buildEnvForLambda :: Env -> Expr -> [Expr] -> Either Err Env
-buildEnvForLambda outerEnv params argForms = case parseListOfSymbolStrings params of
-                                               Left err -> Left err
-                                               Right exprList -> if length exprList /= length argForms
-                                                                   then Left Err { reason = "Expected " ++ show (length exprList) ++ " arguments, got " ++ show (length argForms) }
-                                                                   else case evalForms outerEnv argForms of
-                                                                              Left err -> Left err
-                                                                              Right forms -> Right Env {
-                                                                                              data' = Data.Map.fromList (zip exprList forms),
-                                                                                              outer = Just outerEnv
-                                                                                                       }
+buildEnvForLambda outerEnv params argForms = parseListOfSymbolStrings params >>=
+  \exprList -> if length exprList /= length argForms
+                  then Left Err { reason = "Expected " ++ show (length exprList) ++ " arguments, got " ++ show (length argForms) }
+                  else evalForms outerEnv argForms >>=
+                    \forms -> Right Env {
+                                      data' = Data.Map.fromList (zip exprList forms),
+                                      outer = Just outerEnv
+                                        }
 
 evalForms :: Env -> [Expr] -> Either Err [Expr]
 evalForms env argForms = let evalArgsTuple = map (eval env) argForms

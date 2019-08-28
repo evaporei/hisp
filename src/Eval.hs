@@ -44,13 +44,12 @@ evalLambdaArgs env argForms = if length argForms /= 2
                                 else Right (env, Lambda LambdaData { params = head argForms, body = head $ tail argForms })
 
 evalBuiltInForm :: Env -> Expr -> [Expr] -> Maybe (Either Err (Env, Expr))
-evalBuiltInForm env expr argForms = case expr of
-                                      Symbol s
-                                        | s == "if" -> Just (evalIfArgs env argForms)
-                                        | s == "def" -> Just (evalDefArgs env argForms)
-                                        | s == "fn" -> Just (evalLambdaArgs env argForms)
-                                        | otherwise -> Nothing
-                                      _ -> Nothing
+evalBuiltInForm env (Symbol s) argForms
+   | s == "if" = Just (evalIfArgs env argForms)
+   | s == "def" = Just (evalDefArgs env argForms)
+   | s == "fn" = Just (evalLambdaArgs env argForms)
+   | otherwise = Nothing
+evalBuiltInForm env _ argForms = Nothing
 
 extractExprFromTuple :: Either Err (Env, Expr) -> Either Err Expr
 extractExprFromTuple either = case either of

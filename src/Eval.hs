@@ -59,14 +59,13 @@ createEnvExprTuple :: Env -> Either Err Expr -> Either Err (Env, Expr)
 createEnvExprTuple env either = (env,) <$> either
 
 parseListOfSymbolStrings :: Expr -> Either Err [String]
-parseListOfSymbolStrings form = case form of
-                                  List list -> let l = map (\case
-                                                            Symbol s -> Right s
-                                                            _ -> Left Err { reason = "Expected symbols in the arguments list" }) list
-                                                in if any isLeft l
-                                                     then Left (head (lefts l))
-                                                     else Right (rights l)
-                                  _ -> Left Err { reason = "Expected arguments to be a form" }
+parseListOfSymbolStrings (List list) = let l = map (\case
+                                                    Symbol s -> Right s
+                                                    _ -> Left Err { reason = "Expected symbols in the arguments list" }) list
+                                       in if any isLeft l
+                                             then Left (head (lefts l))
+                                             else Right (rights l)
+parseListOfSymbolStrings _ = Left Err { reason = "Expected arguments to be a form" }
 
 buildEnvForLambda :: Env -> Expr -> [Expr] -> Either Err Env
 buildEnvForLambda outerEnv params argForms = parseListOfSymbolStrings params >>=

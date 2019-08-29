@@ -6,6 +6,7 @@ module Eval
     ) where
 
 import Data.Map (fromList)
+import Data.Maybe (fromMaybe)
 import Data.Either (lefts, isLeft, rights)
 
 import Expr (Expr(..), LambdaData(..))
@@ -84,7 +85,6 @@ evalForms env argForms = let evalArgsTuple = map (eval env) argForms
                                then Left (head (lefts evalArgs))
                                else Right (rights evalArgs)
 
-{-# ANN eval "HLint: ignore Use fromMaybe" #-}
 eval :: Env -> Expr -> Either Err (Env, Expr)
 eval env (Boolean b) = Right (env, Boolean b)
 eval env (Symbol s) = case getExprOfEnv s env of
@@ -93,17 +93,17 @@ eval env (Symbol s) = case getExprOfEnv s env of
 eval env (Number n) = Right (env, Number n)
 eval env (List list) = if null list
                           then Left Err { reason = "Expected a non empty list" }
-                          else case evalBuiltInForm env (head list) (tail list) of
-                                 Just result -> result
-                                 Nothing -> case eval env (head list) of
-                                              Left err -> Left err
-                                              Right (newEnv, expr) -> case expr of
-                                                                        Func func -> case evalForms newEnv (tail list) of
-                                                                                       Left err -> Left err
-                                                                                       Right forms -> createEnvExprTuple newEnv (func forms)
-                                                                        Lambda lambda -> case buildEnvForLambda newEnv (params lambda) (tail list) of
-                                                                                           Left err -> Left err
-                                                                                           Right envForLambda ->  eval envForLambda (body lambda)
-                                                                        _ -> Left Err { reason = "First form must be a function" }
+                          else fromMaybe
+                                 (case eval env (head list) of
+                                    Left err -> Left err
+                                    Right (newEnv, expr) -> case expr of
+                                                              Func func -> case evalForms newEnv (tail list) of
+                                                                             Left err -> Left err
+                                                                             Right forms -> createEnvExprTuple newEnv (func forms)
+                                                              Lambda lambda -> case buildEnvForLambda newEnv (params lambda) (tail list) of
+                                                                                 Left err -> Left err
+                                                                                 Right envForLambda ->  eval envForLambda (body lambda)
+                                                              _ -> Left Err { reason = "First form must be a function" })
+                                 (evalBuiltInForm env (head list) (tail list))
 eval env(Func _) = Left Err { reason = "Unexpected form (func)" }
 eval env(Lambda l) = Left Err { reason = "Unexpected form (lambda)" }

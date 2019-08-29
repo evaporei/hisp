@@ -17,13 +17,12 @@ data Expr = Boolean Bool
           | Lambda LambdaData
 
 instance Show Expr where
-  show e = case e of
-             Boolean b -> map toLower (show b)
-             Symbol s -> s
-             Number n -> show n
-             List list -> "(" ++ intercalate "," (map show list) ++ ")"
-             Func f -> show f
-             Lambda l -> show l
+  show (Boolean b) = map toLower (show b)
+  show (Symbol s) = s
+  show (Number n) = show n
+  show (List list) = "(" ++ intercalate "," (map show list) ++ ")"
+  show (Func f) = show f
+  show (Lambda l) = show l
 
 instance Eq Expr where
   (Boolean x) == (Boolean y) = x == y

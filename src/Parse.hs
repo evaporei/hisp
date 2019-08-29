@@ -18,9 +18,8 @@ readSeq :: [String] -> [Expr] -> Either Err (Expr, [String])
 readSeq [] _ = Left Err { reason = "Could not find closing `)`" }
 readSeq (nextToken:rest) exprList
   | nextToken == ")" = Right (List exprList, rest)
-  | otherwise = case parse (nextToken : rest) of
-                  Right (expr, tokens) -> readSeq tokens (exprList ++ [expr])
-                  Left err -> Left err
+  | otherwise =
+    parse (nextToken : rest) >>= \(expr, tokens) -> readSeq tokens (exprList ++ [expr])
 
 parseAtom :: String -> Expr
 parseAtom atom 

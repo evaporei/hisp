@@ -22,9 +22,8 @@ isNumber (Number n) = True
 isNumber _ = False
 
 sumAux :: Float -> Expr -> Float
-sumAux acc expr = case expr of
-                   Number n -> acc + n
-                   _ -> error "Should not sum Expressions that are not Numbers"
+sumAux acc (Number n) = acc + n
+sumAux _ _ = error "Should not sum Expressions that are not Numbers"
 
 sum' :: [Expr] -> Either Err Expr
 sum' [] = Left Err { reason = "Could not sum, list expression is empty" }

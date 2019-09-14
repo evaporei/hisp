@@ -118,6 +118,5 @@ addKeyToEnv key expr env = Env {
 getExprOfEnv :: String -> Env -> Maybe Expr
 getExprOfEnv key env = case Data.Map.lookup key (data' env) of
                          Just v -> Just v
-                         Nothing -> case outer env of
-                                      Nothing -> Nothing
-                                      Just o -> getExprOfEnv key o
+                         Nothing -> outer env >>=
+                                      \o -> getExprOfEnv key o

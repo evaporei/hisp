@@ -32,9 +32,8 @@ sum' exprList = if any isNumber exprList
                    else Left Err { reason = "Could not sum, not all expressions in list are Numbers" }
 
 getExprNumber :: Expr -> Float
-getExprNumber expr = case expr of
-                         Number n -> n
-                         _ -> error "Could not get Number out of an Expression that is not a Number"
+getExprNumber (Number n) = n
+getExprNumber _ = error "Could not get Number out of an Expression that is not a Number"
 
 subtract' :: [Expr] -> Either Err Expr
 subtract' [] = Left Err { reason = "Could not subtract, list expression is empty" }
